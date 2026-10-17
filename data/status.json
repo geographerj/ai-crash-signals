@@ -1,9 +1,9 @@
 {
- "computed_at": "2026-10-17T01:24:58+00:00",
+ "computed_at": "2026-10-17T01:28:07+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: high-yield spread widening.",
- "build": "587ab21",
+ "build": "5b40c2c",
  "indicators": [
   {
    "id": "sp500_trend",

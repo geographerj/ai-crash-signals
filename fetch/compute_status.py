@@ -255,6 +255,7 @@ def main():
     write_js("log", log)
     write_js("fred", fred)
     write_js("rules", RULES)
+    write_js("copy", json.loads((ROOT / "fetch" / "copy.json").read_text(encoding="utf-8")))
     stamp_index(status["build"])
     print(f"level {level} {status['level_name']}: {text}")
     for i in inds:
