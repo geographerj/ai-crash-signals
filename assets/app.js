@@ -525,6 +525,7 @@
       w.hidden = false;
       w.textContent = "Warning: the browser calculation differs from data/status.json (" + diffs.join(", ") + "). Showing the browser calculation. Re-run fetch/compute_status.py.";
     }
+    if (served.build) $("build").textContent = served.build;
     var ai = live.indicators.filter(function (i) { return i.group !== "macro"; });
     var mac = live.indicators.filter(function (i) { return i.group === "macro"; });
     step(function () { renderHeader(live, fred); });

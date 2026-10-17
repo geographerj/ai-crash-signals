@@ -185,6 +185,7 @@ td.val { min-width: 220px; }
 
 footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 0.88rem; }
 footer p { margin: 0 0 4px; }
+footer .build { font-size: 0.72rem; color: var(--ink-3); }
 
 @media (max-width: 980px) {
   .masthead { grid-template-columns: 1fr; gap: 24px; }

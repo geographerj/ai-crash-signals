@@ -4,6 +4,8 @@ Thresholds come from fetch/rules.json. assets/status.js implements the same logi
 in the browser; keep the two in step (the page warns if they disagree).
 """
 import json
+import re
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -27,6 +29,28 @@ def write_js(key, obj):
             "window.__DATA = window.__DATA || {};\n"
             "window.__DATA." + key + " = " + body + ";\n")
     (DATA / (key + ".js")).write_text(text, encoding="utf-8")
+
+
+def build_version(now):
+    """Short git hash if available, else a UTC timestamp. Used to bust browser caches."""
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
+                             text=True, timeout=10)
+        v = out.stdout.strip()
+        if out.returncode == 0 and re.fullmatch(r"[0-9a-f]+", v):
+            return v
+    except Exception:  # noqa: BLE001
+        pass
+    return now.strftime("%Y%m%d%H%M")
+
+
+def stamp_index(version):
+    """Rewrite every ?v=<hex> token in index.html (idempotent)."""
+    p = ROOT / "index.html"
+    html = p.read_text(encoding="utf-8")
+    new = re.sub(r"\?v=[0-9a-f]+", "?v=" + version, html)
+    if new != html:
+        p.write_text(new, encoding="utf-8")
 
 
 def cond_true(c, numeric):
@@ -213,7 +237,7 @@ def main():
     history = [{"month": d[:7], "close": c, "sma10": round(s, 2), "tripped": c < s} for d, c, s in me[-12:]]
     status = {"computed_at": now.isoformat(timespec="seconds"), "level": level,
               "level_name": RULES["levels"][str(level)]["name"], "reason": text,
-              "indicators": inds, "sp500_trend_history": history}
+              "build": build_version(now), "indicators": inds, "sp500_trend_history": history}
     (DATA / "status.json").write_text(json.dumps(status, indent=1), encoding="utf-8")
 
     log_path = DATA / "log.json"
@@ -231,6 +255,7 @@ def main():
     write_js("log", log)
     write_js("fred", fred)
     write_js("rules", RULES)
+    stamp_index(status["build"])
     print(f"level {level} {status['level_name']}: {text}")
     for i in inds:
         print(f"  {i['id']:20s} {i['status']:8s} {i['as_of']}{' STALE' if i['stale'] else ''}")
