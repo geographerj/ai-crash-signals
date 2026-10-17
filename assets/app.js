@@ -80,7 +80,7 @@
             fmt, tipFmt, monthly, areaBelow, gapShade, legend} */
   var DEF = { W: 340, H: 205, ML: 40, MR: 64, MT: 12, MB: 22 };
   var SZ_FEATURE = { W: 440, H: 372, ML: 52, MR: 84, MT: 16, MB: 28 };
-  var SZ_COMPACT = { W: 320, H: 124, ML: 34, MR: 54, MT: 8, MB: 18 };
+  var SZ_COMPACT = { W: 320, H: 124, ML: 40, MR: 54, MT: 8, MB: 18 };
   var tip = null;
 
   /* ---------- informational hover cards ---------- */
@@ -178,6 +178,10 @@
     var pad = (hi - lo) * 0.1 || 1;
     if (cfg.floorZero && lo >= 0) lo = Math.max(0, lo - pad); else lo -= pad;
     hi += pad;
+    if (cfg.snapDomain) {  // featured chart: snap the y-range to round gridlines so the plot fills its whole height
+      var stp = niceStep(hi - lo, 5);
+      lo = Math.floor(lo / stp) * stp; hi = Math.ceil(hi / stp) * stp;
+    }
     var t0 = tsOf(cfg.series[0].pts[0][0]), t1 = tsOf(cfg.series[0].pts[cfg.series[0].pts.length - 1][0]);
     cfg.series.forEach(function (s) {
       t0 = Math.min(t0, tsOf(s.pts[0][0]));
@@ -195,7 +199,7 @@
     niceTicks(lo, hi, cfg.tickMin, cfg.tickMax).forEach(function (t) {
       var y = Y(t);
       svg.appendChild(sv("line", { x1: ML, x2: ML + pw, y1: y, y2: y, stroke: varColor("--grid"), "stroke-width": 1 }));
-      svg.appendChild(sv("text", { x: ML - 6, y: y + 3.5, "text-anchor": "end" }, cfg.axisFmt ? cfg.axisFmt(t) : cfg.fmt(t)));
+      svg.appendChild(sv("text", { x: ML - 6, y: y + 3.5, "text-anchor": "end" }, String(cfg.axisFmt ? cfg.axisFmt(t) : cfg.fmt(t)).replace(/^-/, "−")));
     });
     var y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
     for (var yr = y0 + 1; yr <= y1; yr++) {
@@ -429,7 +433,7 @@
 
     var me = d.sp500.month_ends;
     addChart($("chart-feature"), function () { return buildChart({
-      size: SZ_FEATURE, feature: true,
+      size: SZ_FEATURE, feature: true, snapDomain: true, tickMin: 4, tickMax: 6,
       title: "S&P 500 vs 10-month average", id: "sp500_trend", detail: dtl("sp500_trend"), trig: function (v) { var pc = (v[0] - v[1]) / v[1] * 100; return n0(v[0]) + " is " + pts(pc, 1) + "% " + (pc >= 0 ? "above" : "below") + " its 10-month average (trigger: month-end close below it)"; }, caption: "Month-end close vs its 10-month average, last " + me.length + " months. Trigger: a month-end close below the average.", status: by.sp500_trend.status,
       series: [
         { name: "Month-end close", color: "--series-sp500", pts: me.map(function (r) { return [r[0], r[1]]; }) },
