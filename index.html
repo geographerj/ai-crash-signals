@@ -15,7 +15,6 @@
 
   <header class="masthead">
     <div class="mast-text">
-      <p class="eyebrow">Market indicators and a signal level</p>
       <h1>AI Crash Signals</h1>
       <p class="sub">Which public indicators have flagged equity drawdowns before, and which of them are flagging now.</p>
       <p class="meta">Last updated <time id="updated">loading</time></p>
@@ -28,13 +27,17 @@
     </div>
   </header>
 
-  <section class="lede">
-    <p>This page tracks two kinds of evidence for a break in the AI-driven equity rally. Macro indicators come from the Federal Reserve Bank of St. Louis (FRED) and refresh automatically every weekday morning. AI-specific indicators, such as credit spreads on AI borrowers, memory prices and funding events, are entered by hand with an as-of date and marked stale after 45 days.</p>
-  </section>
-
   <section id="charts" aria-labelledby="h-charts">
     <h2 id="h-charts">Market indicators</h2>
-    <div class="chart-grid" id="chart-grid"></div>
+    <div class="market">
+      <div class="feature" id="chart-feature"></div>
+      <div class="chart-grid" id="chart-grid"></div>
+    </div>
+  </section>
+
+  <section class="lede" aria-labelledby="h-about">
+    <h2 id="h-about">About this page</h2>
+    <p>This page tracks two kinds of evidence for a break in the AI-driven equity rally. Macro indicators come from the Federal Reserve Bank of St. Louis (FRED) and refresh automatically every weekday morning. AI-specific indicators, such as credit spreads on AI borrowers, memory prices and funding events, are entered by hand with an as-of date and marked stale after 45 days.</p>
   </section>
 
   <section aria-labelledby="h-ai">

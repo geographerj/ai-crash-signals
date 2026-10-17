@@ -57,14 +57,15 @@
     var m = r <= 1 ? 1 : r <= 2 ? 2 : r <= 2.5 ? 2.5 : r <= 5 ? 5 : 10;
     return m * mag;
   }
-  function niceTicks(lo, hi) {
+  function niceTicks(lo, hi, mn, mx) {
+    mn = mn || 4; mx = mx || 5;
     var cands = [];
     for (var k = -4; k <= 7; k++) {
       [1, 2, 2.5, 5].forEach(function (m) {
         var step = m * Math.pow(10, k), t = [];
         if ((hi - lo) / step > 12) return;
         for (var v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6));
-        if (t.length >= 4 && t.length <= 5) cands.push({ step: step, t: t });
+        if (t.length >= mn && t.length <= mx) cands.push({ step: step, t: t });
       });
     }
     if (cands.length) { cands.sort(function (p, q) { return q.step - p.step; }); return cands[0].t; }
@@ -77,7 +78,9 @@
   /* ---------- line chart ---------- */
   /* cfg: {title, caption, status, color, series:[{name,color,pts:[[date,val]],dash,step,width}], refs:[{y,label,pos}],
             fmt, tipFmt, monthly, areaBelow, gapShade, legend} */
-  var W = 340, H = 205, ML = 40, MR = 64, MT = 12, MB = 22;
+  var DEF = { W: 340, H: 205, ML: 40, MR: 64, MT: 12, MB: 22 };
+  var SZ_FEATURE = { W: 440, H: 372, ML: 52, MR: 84, MT: 16, MB: 28 };
+  var SZ_COMPACT = { W: 320, H: 124, ML: 34, MR: 54, MT: 8, MB: 18 };
   var tip = null;
 
   /* ---------- informational hover cards ---------- */
@@ -159,7 +162,8 @@
   document.addEventListener("visibilitychange", function () { lastTs = 0; if (!document.hidden) kick(); });
 
   function buildChart(cfg) {
-    var wrap = el("div", { "class": "chart" + (cfg.status === "watch" || cfg.status === "tripped" ? " flag-" + cfg.status : "") });
+    var Z = cfg.size || DEF, W = Z.W, H = Z.H, ML = Z.ML, MR = Z.MR, MT = Z.MT, MB = Z.MB;
+    var wrap = el("div", { "class": "chart" + (cfg.compact ? " compact" : "") + (cfg.feature ? " feature-chart" : "") + (cfg.status === "watch" || cfg.status === "tripped" ? " flag-" + cfg.status : "") });
     var head = el("div", { "class": "chart-head" });
     head.appendChild(el("h3", null, cfg.title));
     head.appendChild(chip(cfg.status));
@@ -188,7 +192,7 @@
 
     var shade = sv("g", { opacity: 1 });
 
-    niceTicks(lo, hi).forEach(function (t) {
+    niceTicks(lo, hi, cfg.tickMin, cfg.tickMax).forEach(function (t) {
       var y = Y(t);
       svg.appendChild(sv("line", { x1: ML, x2: ML + pw, y1: y, y2: y, stroke: varColor("--grid"), "stroke-width": 1 }));
       svg.appendChild(sv("text", { x: ML - 6, y: y + 3.5, "text-anchor": "end" }, cfg.axisFmt ? cfg.axisFmt(t) : cfg.fmt(t)));
@@ -376,7 +380,7 @@
       cross.setAttribute("x1", xs); cross.setAttribute("x2", xs); cross.setAttribute("visibility", "visible");
       var top = "<b>" + fmtDate(rows[0].d, cfg.monthly) + "</b>";
       rows.forEach(function (rw) { top += "<br><i style='background:" + varColor(rw.c) + "'></i>" + (cfg.series.length > 1 ? rw.n + " " : "") + rw.v; });
-      var gr = $("chart-grid").getBoundingClientRect();
+      var gr = (wrap.parentNode || $("chart-grid")).getBoundingClientRect();
       showCard(cardHTML({ id: cfg.id, top: top, trig: cfg.trig ? cfg.trig(vals) : "", status: cfg.status, detail: cfg.detail }), ev.clientX, ev.clientY, gr.right);
     }
     function onLeave() {
@@ -424,8 +428,9 @@
     var kAxis = function (v) { return (v / 1000).toFixed(0) + "k"; };
 
     var me = d.sp500.month_ends;
-    addChart(grid, function () { return buildChart({
-      title: "S&P 500 vs 10-month average", id: "sp500_trend", detail: dtl("sp500_trend"), trig: function (v) { var pc = (v[0] - v[1]) / v[1] * 100; return n0(v[0]) + " is " + pts(pc, 1) + "% " + (pc >= 0 ? "above" : "below") + " its 10-month average (trigger: month-end close below it)"; }, caption: "Month-end close, last " + me.length + " months", status: by.sp500_trend.status,
+    addChart($("chart-feature"), function () { return buildChart({
+      size: SZ_FEATURE, feature: true,
+      title: "S&P 500 vs 10-month average", id: "sp500_trend", detail: dtl("sp500_trend"), trig: function (v) { var pc = (v[0] - v[1]) / v[1] * 100; return n0(v[0]) + " is " + pts(pc, 1) + "% " + (pc >= 0 ? "above" : "below") + " its 10-month average (trigger: month-end close below it)"; }, caption: "Month-end close vs its 10-month average, last " + me.length + " months. Trigger: a month-end close below the average.", status: by.sp500_trend.status,
       series: [
         { name: "Month-end close", color: "--series-sp500", pts: me.map(function (r) { return [r[0], r[1]]; }) },
         { name: "10-month average", color: "--ink-3", width: 2, noFill: true, dash: "5 3", pts: me.map(function (r) { return [r[0], r[2]]; }) }
@@ -433,44 +438,37 @@
       fmt: n0, monthly: true, gapShade: true, legend: true
     }); });
     addChart(grid, function () { return buildChart({
-      title: "Yield curve, 10y minus 3m", id: "yield_curve", detail: dtl("yield_curve"), trig: function (v) { return (v[0] >= 0 ? "+" : "-") + pts(v[0]) + " pts, inversion at 0, " + pts(v[0]) + " pts " + (v[0] >= 0 ? "above" : "below") + " it"; }, caption: "Percentage points, daily, 36 months", status: by.yield_curve.status,
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "Yield curve (10y-3m)", id: "yield_curve", detail: dtl("yield_curve"), trig: function (v) { return (v[0] >= 0 ? "+" : "-") + pts(v[0]) + " pts, inversion at 0, " + pts(v[0]) + " pts " + (v[0] >= 0 ? "above" : "below") + " it"; }, caption: "pts, daily", status: by.yield_curve.status,
       series: [{ name: "10y-3m", color: "--series-yield", pts: lastMonths(s.T10Y3M.obs, 36) }],
       refs: [{ y: 0, label: "Inversion (0)" }], areaBelow: 0, fmt: n2
     }); });
     addChart(grid, function () { return buildChart({
-      title: "Baa spread to 10-year Treasury", id: "baa_spread", detail: dtl("baa_spread"), trig: function (v) { var tl = RULES.macro.baa_spread.tripped_level; return n2(v[0]) + " pts, trigger " + tl + ", " + pts(tl - v[0]) + " pts " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "Percentage points, daily, 36 months", status: by.baa_spread.status,
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "Baa spread", id: "baa_spread", detail: dtl("baa_spread"), trig: function (v) { var tl = RULES.macro.baa_spread.tripped_level; return n2(v[0]) + " pts, trigger " + tl + ", " + pts(tl - v[0]) + " pts " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "pts, daily", status: by.baa_spread.status,
       series: [{ name: "BAA10Y", color: "--series-baa", pts: lastMonths(s.BAA10Y.obs, 36) }],
       refs: [{ y: 2.13, label: "Trigger 2.13" }], fmt: n2
     }); });
     addChart(grid, function () { return buildChart({
-      title: "High-yield spread (OAS)", id: "hy_oas", detail: dtl("hy_oas"), trig: function (v) { var tl = RULES.macro.hy_oas.tripped_level; return n2(v[0]) + "%, trigger " + tl.toFixed(1) + "%, " + pts(tl - v[0]) + " pts " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "Percentage points, daily, 36 months", status: by.hy_oas.status,
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "High-yield spread", id: "hy_oas", detail: dtl("hy_oas"), trig: function (v) { var tl = RULES.macro.hy_oas.tripped_level; return n2(v[0]) + "%, trigger " + tl.toFixed(1) + "%, " + pts(tl - v[0]) + " pts " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "pts, daily", status: by.hy_oas.status,
       series: [{ name: "HY OAS", color: "--series-hy", pts: lastMonths(s.BAMLH0A0HYM2.obs, 36) }],
       refs: [{ y: 5.0, label: "Trigger 5.0" }], fmt: n2, floorZero: true
     }); });
     var low = d.claims.low_52w;
     addChart(grid, function () { return buildChart({
-      title: "Initial claims, 4-week average", id: "claims", detail: dtl("claims"), trig: function (v) { var pc = (v[0] / low - 1) * 100; return k1(v[0]) + ", " + pts(pc, 1) + "% " + (pc >= 0 ? "above" : "below") + " 52-week low (trigger +" + RULES.macro.claims.tripped_pct + "%)"; }, caption: "Weekly, last " + d.claims.avg4.length + " weeks", status: by.claims.status,
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "Jobless claims (4-wk)", id: "claims", detail: dtl("claims"), trig: function (v) { var pc = (v[0] / low - 1) * 100; return k1(v[0]) + ", " + pts(pc, 1) + "% " + (pc >= 0 ? "above" : "below") + " 52-week low (trigger +" + RULES.macro.claims.tripped_pct + "%)"; }, caption: "weekly", status: by.claims.status,
       series: [{ name: "4-week average", color: "--series-claims", pts: d.claims.avg4 }],
       refs: [{ y: low, label: "52-week low", below: true }, { y: low * 1.2, label: "Trigger: +20%", dy: -8 }],
       fmt: k1, axisFmt: kAxis, monthly: false
     }); });
     addChart(grid, function () { return buildChart({
-      title: "Sahm rule indicator", id: "sahm", detail: dtl("sahm"), trig: function (v) { var tl = RULES.macro.sahm.tripped_value; return n2(v[0]) + ", trigger " + tl.toFixed(2) + ", " + pts(tl - v[0]) + " " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "Percentage points, monthly", status: by.sahm.status,
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "Sahm rule", id: "sahm", detail: dtl("sahm"), trig: function (v) { var tl = RULES.macro.sahm.tripped_value; return n2(v[0]) + ", trigger " + tl.toFixed(2) + ", " + pts(tl - v[0]) + " " + (v[0] <= tl ? "below" : "above") + " it"; }, caption: "pts, monthly", status: by.sahm.status,
       series: [{ name: "Sahm", color: "--series-sahm", pts: s.SAHMREALTIME.obs }],
       refs: [{ y: 0.5, label: "Trigger 0.50" }], fmt: n2, monthly: true, floorZero: true
     }); });
     addChart(grid, function () { return buildChart({
-      title: "Federal funds effective rate", id: "fed_path", detail: dtl("fed_path"), trig: function (v) { return n2(v[0]) + "%, context only, no trigger"; }, caption: "Percent, daily, 36 months", status: "context",
+      size: SZ_COMPACT, compact: true, tickMin: 3, tickMax: 4, title: "Fed funds rate", id: "fed_path", detail: dtl("fed_path"), trig: function (v) { var f = d.fed, mv = f.last_move_60d; return n2(v[0]) + "%, target range " + f.target_low.toFixed(2) + " to " + f.target_high.toFixed(2) + "%" + (f.estimated ? " (estimated)" : "") + ". " + (mv ? "Last move a " + mv.direction + " on " + fmtDate(mv.date) + "." : "No move in the last 60 days.") + " Context only, no trigger."; }, caption: "%, daily", status: "context",
       series: [{ name: "DFF", color: "--series-fed", step: true, pts: lastMonths(s.DFF.obs, 36) }],
       fmt: n2
     }); });
-    var f = d.fed, ctx = el("div", { "class": "chart ctx" });
-    ctx.appendChild(el("h3", null, "Fed path: regime context"));
-    var mv = f.last_move_60d;
-    ctx.appendChild(el("p", null, "Target range " + f.target_low.toFixed(2) + " to " + f.target_high.toFixed(2) + "%" + (f.estimated ? " (estimated from the effective rate)" : "") + ". " +
-      (mv ? "The last move was a " + mv.direction + " on " + fmtDate(mv.date) + "." : "No move in the last 60 days.") +
-      " This is context, not a trigger: every peak since 1987 came during tightening or just after the turn to easing."));
-    grid.appendChild(ctx);
 
     // shared scheduler drives every chart; charts only advance while visible in the viewport
     charts.forEach(function (c, i) {
