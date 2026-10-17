@@ -6,6 +6,7 @@
   --ink-3: #6b6b6b;
   --rule: #dddddd;
   --grid: #ececec;
+  --line-ghost: #c9c9c9;
 
   /* jewel tones (validated with the dataviz palette validator) */
   --sapphire: #1f4fa3;
@@ -49,6 +50,7 @@
     --ink-3: #8f8f94;
     --rule: #2d2d31;
     --grid: #1f1f23;
+    --line-ghost: #4a4a4f;
     --sapphire: #5e8ae0;
     --teal: #2ba3ae;
     --garnet: #e0607a;
@@ -67,6 +69,7 @@
   --ink-3: #8f8f94;
   --rule: #2d2d31;
   --grid: #1f1f23;
+  --line-ghost: #4a4a4f;
   --sapphire: #5e8ae0;
   --teal: #2ba3ae;
   --garnet: #e0607a;

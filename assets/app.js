@@ -108,6 +108,8 @@
     var svg = sv("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": cfg.title + ". " + cfg.caption });
     var uid = "c" + Math.random().toString(36).slice(2, 7);
 
+    var shade = sv("g", { opacity: 1 });
+
     niceTicks(lo, hi).forEach(function (t) {
       var y = Y(t);
       svg.appendChild(sv("line", { x1: ML, x2: ML + pw, y1: y, y2: y, stroke: varColor("--grid"), "stroke-width": 1 }));
@@ -139,7 +141,7 @@
       var cp = sv("clipPath", { id: uid + "b" });
       cp.appendChild(sv("rect", { x: ML, y: zy, width: pw, height: Math.max(0, MT + ph - zy) }));
       svg.appendChild(cp);
-      svg.appendChild(sv("path", { d: area, fill: varColor("--garnet"), "fill-opacity": 0.28, "clip-path": "url(#" + uid + "b)" }));
+      shade.appendChild(sv("path", { d: area, fill: varColor("--garnet"), "fill-opacity": 0.28, "clip-path": "url(#" + uid + "b)" }));
     }
     if (cfg.gapShade) {
       var a = cfg.series[0].pts, b = cfg.series[1].pts, run = [];
@@ -147,7 +149,7 @@
         if (run.length > 1) {
           var d = "M" + run.map(function (p) { return p.x.toFixed(1) + " " + p.c.toFixed(1); }).join("L");
           d += "L" + run.slice().reverse().map(function (p) { return p.x.toFixed(1) + " " + p.s.toFixed(1); }).join("L") + "Z";
-          svg.appendChild(sv("path", { d: d, fill: varColor("--garnet"), "fill-opacity": 0.3 }));
+          shade.appendChild(sv("path", { d: d, fill: varColor("--garnet"), "fill-opacity": 0.3 }));
         }
         run = [];
       };
@@ -167,6 +169,7 @@
       }
       flush();
     }
+    svg.appendChild(shade);
     (cfg.refs || []).forEach(function (r) {
       var y = Y(r.y);
       svg.appendChild(sv("line", { x1: ML, x2: ML + pw, y1: y, y2: y, stroke: varColor("--garnet"), "stroke-width": 1.25, "stroke-dasharray": "4 3" }));
@@ -175,31 +178,86 @@
       }
     });
 
-    // series
-    var ends = [];
+    // series: ghost (gray) line first, colored line drawn on top by animation
+    var ends = [], anim = [], fades = [];
     var defs = sv("defs");
     svg.appendChild(defs);
     cfg.series.forEach(function (s, si) {
-      if (s.noFill) { /* reference series: line only */ } else {
-        var gid = uid + "g" + si, grad = sv("linearGradient", { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 });
+      var dpath = pathOf(s.pts, s.step);
+      var lineAttrs = { d: dpath, fill: "none", "stroke-width": s.width || 2.75, "stroke-linejoin": "round", "stroke-linecap": "round" };
+      if (s.noFill) {
+        lineAttrs.stroke = varColor(s.color);
+        lineAttrs["stroke-dasharray"] = s.dash || "";
+        svg.appendChild(sv("path", lineAttrs));
+      } else {
+        var gid = uid + "g" + si, cid = uid + "c" + si;
+        var grad = sv("linearGradient", { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 });
         grad.appendChild(sv("stop", { offset: "0%", "stop-color": varColor(s.color), "stop-opacity": 0.15 }));
         grad.appendChild(sv("stop", { offset: "100%", "stop-color": varColor("--bg"), "stop-opacity": 0 }));
         defs.appendChild(grad);
-        svg.appendChild(sv("path", { d: pathOf(s.pts, s.step) + "L" + X(s.pts[s.pts.length - 1][0]).toFixed(1) + " " + (MT + ph) + "L" + X(s.pts[0][0]).toFixed(1) + " " + (MT + ph) + "Z", fill: "url(#" + gid + ")" }));
+        var clip = sv("clipPath", { id: cid }), crect = sv("rect", { x: 0, y: 0, width: 0, height: H });
+        clip.appendChild(crect);
+        defs.appendChild(clip);
+        svg.appendChild(sv("path", { d: dpath + "L" + X(s.pts[s.pts.length - 1][0]).toFixed(1) + " " + (MT + ph) + "L" + X(s.pts[0][0]).toFixed(1) + " " + (MT + ph) + "Z", fill: "url(#" + gid + ")", "clip-path": "url(#" + cid + ")" }));
+        var ghost = sv("path", Object.assign({ stroke: varColor("--line-ghost") }, lineAttrs));
+        var colored = sv("path", Object.assign({ stroke: varColor(s.color), visibility: "hidden" }, lineAttrs));
+        svg.appendChild(ghost);
+        svg.appendChild(colored);
+        anim.push({ s: s, colored: colored, crect: crect, len: 0, dot: null });
       }
-      svg.appendChild(sv("path", { d: pathOf(s.pts, s.step), fill: "none", stroke: varColor(s.color), "stroke-width": s.width || 2.75,
-        "stroke-linejoin": "round", "stroke-linecap": "round", "stroke-dasharray": s.dash || "" }));
       var last = s.pts[s.pts.length - 1];
       ends.push({ s: s, x: X(last[0]), y: Y(last[1]), v: last[1] });
     });
-    // end dots and labels (nudge to avoid collision)
+    // end dots (they travel along the line) and callouts (hidden until the dot arrives)
     ends.sort(function (p, q) { return p.y - q.y; });
     ends.forEach(function (e, idx) {
       e.ly = idx === 0 ? e.y : Math.max(e.y, ends[idx - 1].ly + 12);
-      var ly = e.ly;
-      svg.appendChild(sv("circle", { cx: e.x, cy: e.y, r: 4.5, fill: varColor(e.s.color), stroke: varColor("--bg"), "stroke-width": 2 }));
-      svg.appendChild(sv("text", { x: e.x + 9, y: ly + 3.5, "class": "endlabel" }, cfg.fmt(e.v)));
+      var dot = sv("circle", { cx: e.x, cy: e.y, r: 5, fill: varColor(e.s.color), stroke: varColor("--bg"), "stroke-width": 1.5 });
+      var txt = sv("text", { x: e.x + 10, y: e.ly + 4, "class": "endlabel", opacity: 0 }, cfg.fmt(e.v));
+      svg.appendChild(dot);
+      svg.appendChild(txt);
+      fades.push(txt);
+      var mine = anim.filter(function (a) { return a.s === e.s; })[0];
+      if (mine) { mine.dot = dot; dot.setAttribute("visibility", "hidden"); } else { dot.setAttribute("opacity", 0); fades.push(dot); }
     });
+    fades.push(shade);
+
+    var DUR = 2500, FADE = 400, timer = null, token = 0;
+    function ease(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
+    function setFade(f) { fades.forEach(function (n) { n.setAttribute("opacity", f); }); }
+    function setProgress(p) {
+      anim.forEach(function (a) {
+        if (!a.len) a.len = a.colored.getTotalLength();
+        a.colored.style.strokeDasharray = a.len + " " + a.len;
+        a.colored.style.strokeDashoffset = a.len * (1 - p);
+        a.colored.setAttribute("visibility", "visible");
+        var pt = a.colored.getPointAtLength(p * a.len);
+        a.dot.setAttribute("cx", pt.x); a.dot.setAttribute("cy", pt.y); a.dot.setAttribute("visibility", "visible");
+        a.crect.setAttribute("width", Math.max(0, pt.x));
+      });
+    }
+    function finalize() { setProgress(1); setFade(1); }
+    function play(delay) {
+      var my = ++token;
+      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finalize(); return; }
+      setFade(0);
+      anim.forEach(function (a) { a.colored.setAttribute("visibility", "hidden"); a.dot.setAttribute("visibility", "hidden"); a.crect.setAttribute("width", 0); });
+      var t0 = null;
+      function frame(now) {
+        if (my !== token) return;
+        if (t0 === null) t0 = now + (delay || 0);
+        var el2 = now - t0;
+        if (el2 < 0) { timer = requestAnimationFrame(frame); return; }
+        var p = Math.min(1, el2 / DUR);
+        setProgress(ease(p));
+        if (el2 > DUR) setFade(Math.min(1, (el2 - DUR) / FADE));
+        if (el2 < DUR + FADE) timer = requestAnimationFrame(frame); else finalize();
+      }
+      timer = requestAnimationFrame(frame);
+    }
+    wrap._play = play;
+    wrap._finalize = finalize;
+    wrap.addEventListener("click", function () { play(0); });
 
     // hover layer
     var cross = sv("line", { y1: MT, y2: MT + ph, stroke: varColor("--ink-3"), "stroke-width": 1, visibility: "hidden" });
@@ -269,8 +327,9 @@
     var by = {};
     status.indicators.forEach(function (i) { by[i.id] = i; });
     var s = fred.series, d = fred.derived, grid = $("chart-grid");
+    var charts = [];
     function addChart(g, make) {
-      try { g.appendChild(make()); }
+      try { var n0 = make(); g.appendChild(n0); charts.push(n0); }
       catch (e) { var n = el("div", { "class": "chart" }); n.appendChild(el("p", { "class": "warn" }, "Chart failed to draw: " + e.message)); g.appendChild(n); }
     }
     var n0 = function (v) { return Number(v).toLocaleString("en-US", { maximumFractionDigits: 0 }); };
@@ -326,6 +385,22 @@
       (mv ? "The last move was a " + mv.direction + " on " + fmtDate(mv.date) + "." : "No move in the last 60 days.") +
       " This is context, not a trigger: every peak since 1987 came during tightening or just after the turn to easing."));
     grid.appendChild(ctx);
+
+    // animate each chart once, when it scrolls into view; stagger by column
+    var started = new WeakSet();
+    function start(c, i) { if (started.has(c) || !c._play) return; started.add(c); c._play((i % 3) * 150); }
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      charts.forEach(function (c) { c._finalize(); });
+    } else if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { start(en.target, charts.indexOf(en.target)); io.unobserve(en.target); }
+        });
+      }, { threshold: 0.25 });
+      charts.forEach(function (c) { io.observe(c); });
+    } else {
+      charts.forEach(start);
+    }
   }
 
   function renderTable(tbl, rows) {
