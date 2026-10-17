@@ -1,0 +1,110 @@
+{
+  "stale_days": 45,
+  "levels": {
+    "0": {"name": "Normal", "meaning": "No AI-credit, funding, supply-chain or macro indicator is flagged. Routine monitoring."},
+    "1": {"name": "Watch", "meaning": "At least one AI indicator is on watch or tripped, or a leading macro indicator (yield curve, Baa spread) is flagged. Stress is visible in some markets, but nothing has been confirmed in broad equity prices or credit."},
+    "2": {"name": "Confirmed", "meaning": "Two or more AI indicators are tripped and broad markets agree: the S&P 500 is below its 10-month average, or the Baa or high-yield spread has tripped. Historically this is where stress has stopped being isolated."},
+    "3": {"name": "Severe", "meaning": "Level 2 conditions have held for two consecutive month-ends and credit is breaking: Oracle at junk, AI lab funding tripped, or the high-yield spread at 5.0 or above."}
+  },
+  "ai_ids": ["ai_credit", "hyperscaler_capex", "ai_lab_funding", "dram_prices", "gpu_rental", "lease_cancellations"],
+  "macro": {
+    "sp500_trend": {"name": "S&P 500 vs 10-month average", "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)", "watch_phrase": "S&P 500 below its 10-month average intra-month", "tripped_phrase": "S&P 500 month-end close below its 10-month average", "sma_months": 10},
+    "yield_curve": {"name": "Yield curve (10y minus 3m)", "trigger_text": "T10Y3M below 0 for 5+ consecutive daily readings (tripped); 0 to +0.25 (watch)", "watch_phrase": "yield curve near flat", "tripped_phrase": "yield curve inverted", "tripped_consecutive_days": 5, "watch_max": 0.25},
+    "baa_spread": {"name": "Baa corporate spread (BAA10Y)", "trigger_text": "At or above 2.13 or up 50 bp from 12-month low (tripped); up 30 bp (watch)", "watch_phrase": "Baa spread widening", "tripped_phrase": "Baa spread tripped", "tripped_level": 2.13, "tripped_rise_bp": 50, "watch_rise_bp": 30},
+    "hy_oas": {"name": "High-yield spread (HY OAS)", "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)", "watch_phrase": "high-yield spread widening", "tripped_phrase": "high-yield spread tripped", "tripped_level": 5.0, "tripped_rise_bp": 100, "watch_rise_bp": 50},
+    "claims": {"name": "Initial jobless claims (4-wk avg)", "trigger_text": "20% or more above 52-week low (tripped); 15% or more (watch)", "watch_phrase": "jobless claims rising", "tripped_phrase": "jobless claims tripped", "tripped_pct": 20, "watch_pct": 15},
+    "sahm": {"name": "Sahm rule (real-time)", "trigger_text": "0.50 or higher (tripped); 0.30 or higher (watch)", "watch_phrase": "Sahm rule indicator rising", "tripped_phrase": "Sahm rule tripped", "tripped_value": 0.5, "watch_value": 0.3},
+    "fed_path": {"name": "Fed policy path", "trigger_text": "Context only, never tripped", "regime_days": 60, "regime_change": 0.2}
+  },
+  "ai": {
+    "ai_credit": {
+      "tripped": [
+        [{"field": "oracle_junk", "op": "==", "value": true}],
+        [{"field": "oracle_cds_bp", "op": ">=", "value": 300}, {"field": "oracle_cds_sustained", "op": "==", "value": true}],
+        [{"field": "coreweave_failed_issue", "op": "==", "value": true}],
+        [{"field": "second_neocloud_bond_below_80", "op": "==", "value": true}]
+      ],
+      "watch": [
+        [{"field": "oracle_cds_bp", "op": ">=", "value": 250}],
+        [{"field": "coreweave_bond_price", "op": "<", "value": 80}]
+      ],
+      "trigger_text": "Tripped: Oracle at junk, or CDS 300 bp+ sustained, or a CoreWeave failed issue, or a second neocloud bond under 80. Watch: CDS 250 bp+ or CoreWeave bond under 80.",
+      "watch_phrase": "AI credit stress (CoreWeave distressed, Oracle CDS near record)",
+      "tripped_phrase": "AI credit tripped"
+    },
+    "hyperscaler_capex": {
+      "tripped": [
+        [{"field": "cuts_this_quarter", "op": ">=", "value": 2}],
+        [{"field": "next_year_growth_pct", "op": "<", "value": 20}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: two or more big-four capex cuts in a quarter, or next-year growth guidance under 20%.",
+      "watch_phrase": "hyperscaler capex softening",
+      "tripped_phrase": "hyperscaler capex cuts"
+    },
+    "ai_lab_funding": {
+      "tripped": [
+        [{"field": "down_round", "op": "==", "value": true}],
+        [{"field": "ipo_pulled_or_broken", "op": "==", "value": true}],
+        [{"field": "secondary_discount_pct", "op": ">=", "value": 20}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: a down round, a pulled or broken IPO, or a secondary discount of 20% or more.",
+      "watch_phrase": "AI lab funding strained",
+      "tripped_phrase": "AI lab funding tripped"
+    },
+    "dram_prices": {
+      "tripped": [
+        [{"field": "contract_qoq_pct", "op": "<", "value": 0}],
+        [{"field": "spot_3m_pct", "op": "<=", "value": -10}]
+      ],
+      "watch": [
+        [{"field": "memory_equity_drawdown_pct", "op": "<=", "value": -30}]
+      ],
+      "trigger_text": "Tripped: contract prices down quarter on quarter, or spot down 10% in 3 months. Watch: memory equities down 30%+ from peak (they lead prices by 3 to 9 months).",
+      "watch_phrase": "memory equities down sharply",
+      "tripped_phrase": "DRAM prices falling"
+    },
+    "gpu_rental": {
+      "tripped": [
+        [{"field": "h100_1yr_index", "op": "<", "value": 1.7}],
+        [{"field": "change_3m_pct", "op": "<=", "value": -15}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: H100 1-year index under $1.70/hr, or down 15% in 3 months.",
+      "watch_phrase": "GPU rental prices softening",
+      "tripped_phrase": "GPU rental prices collapsing"
+    },
+    "lease_cancellations": {
+      "tripped": [
+        [{"field": "hyperscalers_cancelling_500mw", "op": ">=", "value": 2}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: two or more hyperscalers cancelling 500 MW or more of leases.",
+      "watch_phrase": "data center lease cancellations",
+      "tripped_phrase": "data center lease cancellations"
+    }
+  },
+  "other_manual": {
+    "earnings_revisions": {
+      "tripped": [
+        [{"field": "net_revisions_negative_months", "op": ">=", "value": 3}],
+        [{"field": "fwd_eps_below_peak_pct", "op": "<=", "value": -3}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: three straight months of net negative revisions, or forward EPS 3% below peak.",
+      "watch_phrase": "earnings revisions turning down",
+      "tripped_phrase": "earnings revisions negative"
+    },
+    "tsmc_revenue": {
+      "tripped": [
+        [{"field": "yoy_3m_avg_pct", "op": "<", "value": 20}],
+        [{"field": "consecutive_mom_drops_5pct", "op": ">=", "value": 2}]
+      ],
+      "watch": [],
+      "trigger_text": "Tripped: 3-month average YoY growth under 20%, or two straight monthly drops of 5%+.",
+      "watch_phrase": "TSMC revenue slowing",
+      "tripped_phrase": "TSMC revenue slowing sharply"
+    }
+  }
+}

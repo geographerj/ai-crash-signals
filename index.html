@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Crash Signals</title>
+<meta name="description" content="A signal level built from public market indicators that have preceded equity drawdowns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="mast-text">
+      <p class="eyebrow">Market indicators and a signal level</p>
+      <h1>AI Crash Signals</h1>
+      <p class="sub">Which public indicators have flagged equity drawdowns before, and which of them are flagging now.</p>
+      <p class="meta">Last updated <time id="updated">loading</time></p>
+      <p class="warn" id="mismatch" hidden></p>
+    </div>
+    <div class="level" id="level" data-level="0" role="status" aria-live="polite">
+      <p class="level-label">Signal level</p>
+      <p class="level-line"><span class="level-num" id="level-num">-</span><span class="level-name" id="level-name">Loading</span></p>
+      <p class="level-reason" id="level-reason"></p>
+    </div>
+  </header>
+
+  <section class="lede">
+    <p>This page tracks two kinds of evidence for a break in the AI-driven equity rally. Macro indicators come from the Federal Reserve Bank of St. Louis (FRED) and refresh automatically every weekday morning. AI-specific indicators, such as credit spreads on AI borrowers, memory prices and funding events, are entered by hand with an as-of date and marked stale after 45 days.</p>
+  </section>
+
+  <section id="charts" aria-labelledby="h-charts">
+    <h2 id="h-charts">Market indicators</h2>
+    <div class="chart-grid" id="chart-grid"></div>
+  </section>
+
+  <section aria-labelledby="h-ai">
+    <h2 id="h-ai">AI indicators</h2>
+    <p class="section-note">Hand-maintained. Each row shows its own as-of date.</p>
+    <div class="table-wrap"><table id="tbl-ai"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-macro">
+    <h2 id="h-macro">Macro indicators</h2>
+    <p class="section-note">Computed from FRED data on each update.</p>
+    <div class="table-wrap"><table id="tbl-macro"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-log">
+    <h2 id="h-log">Check log</h2>
+    <p class="section-note">A new entry is added whenever the signal level changes. Newest first.</p>
+    <div class="table-wrap">
+      <table id="tbl-log">
+        <thead><tr><th>Date</th><th>Level</th><th>Active indicators</th><th>Note</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-levels">
+    <h2 id="h-levels">What the levels mean</h2>
+    <p class="section-note">Levels describe how many independent indicators agree. They say nothing about timing.</p>
+    <ol class="levels" id="levels"></ol>
+  </section>
+
+  <section class="method" aria-labelledby="h-method">
+    <h2 id="h-method">Methodology and sources</h2>
+    <p class="section-note">Lead times and false-alarm records are the reason no single indicator drives the level.</p>
+    <dl>
+      <dt>S&amp;P 500 vs 10-month average</dt>
+      <dd>A lagging price rule. In our backtest since 1950 it held the 2000-02 and 2007-09 losses under 4%, but 52 of 56 exits were false alarms. FRED series SP500.</dd>
+      <dt>Yield curve (10y minus 3m)</dt>
+      <dd>The 2s10s curve inverted about six weeks before the March 2000 peak. The 10y-3m curve inverted about 15 months before October 2007 and had re-steepened by the peak. False alarms in 2019 and 2022-24 (780 days inverted, no recession). Nothing signaled in 1987. FRED series T10Y3M and T10Y2Y.</dd>
+      <dt>Baa spread</dt>
+      <dd>Widened about 58 bp in the two months before the 2000 peak and began widening about three months before 2007. False alarms in 2011, 2014-16, 2018 and 2025. FRED series BAA10Y.</dd>
+      <dt>High-yield spread</dt>
+      <dd>Tight at both peaks. Spikes to roughly 8-9% in 2011 and 2016 with no recession (secondary). FRED carries only three years of history for free. FRED series BAMLH0A0HYM2.</dd>
+      <dt>Initial jobless claims</dt>
+      <dd>Lagging. The 4-week average crossed 20% above its 52-week low about eight months after the 2000 peak and about six months after 2007. False alarms from hurricanes (2005, 2017) and 2023. FRED series ICSA.</dd>
+      <dt>Sahm rule</dt>
+      <dd>Lagging. It fired 15 months after 2000 and six months after 2007, with a false trigger in 2024. FRED series SAHMREALTIME.</dd>
+      <dt>Fed path</dt>
+      <dd>Every peak since 1987 came during tightening or just after the turn to easing. Shown as regime context, not a timer. FRED series DFF, DFEDTARL and DFEDTARU.</dd>
+      <dt>AI credit, lab funding, GPU prices, lease cancellations</dt>
+      <dd>No long history. The triggers are judgment calls modeled on the 2000-01 telecom debt repricing, the IPO window closing in 2000 and the 2001 bandwidth price collapse.</dd>
+      <dt>DRAM prices</dt>
+      <dd>Memory equities led contract prices by three to nine months in 2018 and 2022.</dd>
+      <dt>TSMC revenue</dt>
+      <dd>Coincident at best. It stayed strong after the January 2022 equity peak.</dd>
+      <dt>Decline pacing</dt>
+      <dd>In 2000 and 2007 only 13-23% of the S&amp;P decline had happened one month after the peak. In 1987 and 2020, 87-99% happened within weeks.</dd>
+      <dt>Sources</dt>
+      <dd>FRED (series IDs above); FactSet Earnings Insight; TrendForce; SemiAnalysis; FINRA TRACE; investor.tsmc.com; company earnings releases.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    <p>This page tracks public market indicators and a signal level. It is not investment advice.</p>
+    <p>Data: Federal Reserve Bank of St. Louis (FRED) and the sources listed above.</p>
+  </footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+<script src="data/rules.js"></script>
+<script src="data/fred.js"></script>
+<script src="data/manual.js"></script>
+<script src="data/status.js"></script>
+<script src="data/log.js"></script>
+<script src="assets/status.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
