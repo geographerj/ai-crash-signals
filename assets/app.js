@@ -80,6 +80,39 @@
   var W = 340, H = 205, ML = 40, MR = 64, MT = 12, MB = 22;
   var tip = null;
 
+  /* ---------- animation scheduler: one shared rAF loop for every chart ---------- */
+  var ANIM = { DRAW: 12000, FADE: 800, HOLD: 4000, RESET: 600 };
+  var CYCLE = ANIM.DRAW + ANIM.FADE + ANIM.HOLD + ANIM.RESET;
+  var ctls = [], rafId = null, lastTs = 0;
+  var stats = window.__animStats = { frames: 0, running: false };
+  /* Reduced motion: Jay's own Windows machine has "Animation effects" off, which Chrome reports as
+     prefers-reduced-motion: reduce, and he wants to see the motion. So the flag only turns off the
+     endless loop: we still play ONE slow pass and stop (a click replays it once). Never finalize instantly. */
+  function reducedMotion() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  function anyActive() { return !document.hidden && ctls.some(function (c) { return c.visible && !c.done; }); }
+  function tick(now) {
+    rafId = null;
+    stats.frames++;
+    if (!anyActive()) { stats.running = false; lastTs = 0; return; }
+    var dt = lastTs ? Math.min(now - lastTs, 100) : 16;
+    lastTs = now;
+    var loop = !reducedMotion();
+    ctls.forEach(function (c) {
+      if (!c.visible || c.done) return;
+      c.loop = loop;
+      c.t += dt;
+      var resetAt = ANIM.DRAW + ANIM.FADE + ANIM.HOLD;
+      if (loop && !c.phased && c.t >= resetAt) { c.t -= c.phase; c.phased = true; }  // first hold is longer so charts drift out of sync
+      if (loop && c.t >= CYCLE) c.t -= CYCLE;
+      c.done = c.render(c.t, loop);
+    });
+    rafId = requestAnimationFrame(tick);
+  }
+  function kick() {
+    if (rafId === null && anyActive()) { lastTs = 0; stats.running = true; rafId = requestAnimationFrame(tick); }
+  }
+  document.addEventListener("visibilitychange", function () { lastTs = 0; if (!document.hidden) kick(); });
+
   function buildChart(cfg) {
     var wrap = el("div", { "class": "chart" + (cfg.status === "watch" || cfg.status === "tripped" ? " flag-" + cfg.status : "") });
     var head = el("div", { "class": "chart-head" });
@@ -198,12 +231,13 @@
         var clip = sv("clipPath", { id: cid }), crect = sv("rect", { x: 0, y: 0, width: 0, height: H });
         clip.appendChild(crect);
         defs.appendChild(clip);
-        svg.appendChild(sv("path", { d: dpath + "L" + X(s.pts[s.pts.length - 1][0]).toFixed(1) + " " + (MT + ph) + "L" + X(s.pts[0][0]).toFixed(1) + " " + (MT + ph) + "Z", fill: "url(#" + gid + ")", "clip-path": "url(#" + cid + ")" }));
+        var fillPath = sv("path", { d: dpath + "L" + X(s.pts[s.pts.length - 1][0]).toFixed(1) + " " + (MT + ph) + "L" + X(s.pts[0][0]).toFixed(1) + " " + (MT + ph) + "Z", fill: "url(#" + gid + ")", "clip-path": "url(#" + cid + ")" });
+        svg.appendChild(fillPath);
         var ghost = sv("path", Object.assign({ stroke: varColor("--line-ghost") }, lineAttrs));
         var colored = sv("path", Object.assign({ stroke: varColor(s.color), visibility: "hidden" }, lineAttrs));
         svg.appendChild(ghost);
         svg.appendChild(colored);
-        anim.push({ s: s, colored: colored, crect: crect, len: 0, dot: null });
+        anim.push({ s: s, colored: colored, fill: fillPath, crect: crect, len: 0, dot: null });
       }
       var last = s.pts[s.pts.length - 1];
       ends.push({ s: s, x: X(last[0]), y: Y(last[1]), v: last[1] });
@@ -222,9 +256,14 @@
     });
     fades.push(shade);
 
-    var DUR = 2500, FADE = 400, timer = null, token = 0;
-    function ease(p) { return p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; }
+    // Timeline per cycle: slow steady draw, callout fade-in, hold, fade back to gray, repeat.
+    var T = ANIM;
     function setFade(f) { fades.forEach(function (n) { n.setAttribute("opacity", f); }); }
+    function setOpacity(o) {
+      anim.forEach(function (a) {
+        a.colored.setAttribute("opacity", o); a.fill.setAttribute("opacity", o); a.dot.setAttribute("opacity", o);
+      });
+    }
     function setProgress(p) {
       anim.forEach(function (a) {
         if (!a.len) a.len = a.colored.getTotalLength();
@@ -236,28 +275,31 @@
         a.crect.setAttribute("width", Math.max(0, pt.x));
       });
     }
-    function finalize() { setProgress(1); setFade(1); }
-    function play(delay) {
-      var my = ++token;
-      if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { finalize(); return; }
-      setFade(0);
+    function showGhost() {
       anim.forEach(function (a) { a.colored.setAttribute("visibility", "hidden"); a.dot.setAttribute("visibility", "hidden"); a.crect.setAttribute("width", 0); });
-      var t0 = null;
-      function frame(now) {
-        if (my !== token) return;
-        if (t0 === null) t0 = now + (delay || 0);
-        var el2 = now - t0;
-        if (el2 < 0) { timer = requestAnimationFrame(frame); return; }
-        var p = Math.min(1, el2 / DUR);
-        setProgress(ease(p));
-        if (el2 > DUR) setFade(Math.min(1, (el2 - DUR) / FADE));
-        if (el2 < DUR + FADE) timer = requestAnimationFrame(frame); else finalize();
-      }
-      timer = requestAnimationFrame(frame);
+      setFade(0);
     }
-    wrap._play = play;
-    wrap._finalize = finalize;
-    wrap.addEventListener("click", function () { play(0); });
+    /* Draws the chart at time t (ms into its cycle). Returns true when a single pass has finished. */
+    function render(t, loop) {
+      if (t < 0) { showGhost(); return false; }
+      if (t < T.DRAW) { setOpacity(1); setProgress(t / T.DRAW); setFade(0); return false; }
+      setProgress(1);
+      var u = t - T.DRAW;
+      if (u < T.FADE) { setOpacity(1); setFade(u / T.FADE); return false; }
+      if (!loop) { setOpacity(1); setFade(1); return true; }
+      u -= T.FADE;
+      if (u < T.HOLD) { setOpacity(1); setFade(1); return false; }
+      u -= T.HOLD;
+      if (u < T.RESET) { var o = 1 - u / T.RESET; setOpacity(o); setFade(o); return false; }
+      showGhost();
+      return false;
+    }
+    showGhost();
+    wrap._ctl = { render: render, t: 0, visible: false, done: false, loop: true, phased: false, phase: 0 };
+    wrap.addEventListener("click", function () {
+      var c = wrap._ctl; c.t = 0; c.done = false; c.phased = true; kick();
+    });
+
 
     // hover layer
     var cross = sv("line", { y1: MT, y2: MT + ph, stroke: varColor("--ink-3"), "stroke-width": 1, visibility: "hidden" });
@@ -386,20 +428,22 @@
       " This is context, not a trigger: every peak since 1987 came during tightening or just after the turn to easing."));
     grid.appendChild(ctx);
 
-    // animate each chart once, when it scrolls into view; stagger by column
-    var started = new WeakSet();
-    function start(c, i) { if (started.has(c) || !c._play) return; started.add(c); c._play((i % 3) * 150); }
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      charts.forEach(function (c) { c._finalize(); });
-    } else if ("IntersectionObserver" in window) {
+    // shared scheduler drives every chart; charts only advance while visible in the viewport
+    charts.forEach(function (c, i) {
+      var ctl = c._ctl;
+      ctl.t = -((i % 3) * 150);   // wave start by column
+      ctl.phase = i * 1700;       // per-chart phase so loops do not restart in sync
+      ctls.push(ctl);
+    });
+    if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) { start(en.target, charts.indexOf(en.target)); io.unobserve(en.target); }
-        });
+        entries.forEach(function (en) { en.target._ctl.visible = en.isIntersecting; });
+        kick();
       }, { threshold: 0.25 });
       charts.forEach(function (c) { io.observe(c); });
     } else {
-      charts.forEach(start);
+      charts.forEach(function (c) { c._ctl.visible = true; });
+      kick();
     }
   }
 
