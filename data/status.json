@@ -1,9 +1,9 @@
 {
- "computed_at": "2026-10-17T01:41:06+00:00",
+ "computed_at": "2026-10-19T19:21:21+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: high-yield spread widening.",
- "build": "93476a6",
+ "build": "be81f90",
  "indicators": [
   {
    "id": "sp500_trend",
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "watch",
-   "value_text": "3.23 pts; +52 bp over 3 months",
+   "value_text": "3.31 pts; +60 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-10-15",
+   "as_of": "2026-10-16",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
