@@ -1,18 +1,18 @@
 {
- "computed_at": "2026-10-23T17:53:32+00:00",
+ "computed_at": "2026-10-26T19:21:20+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: high-yield spread widening.",
- "build": "92266e8",
+ "build": "939bbd5",
  "indicators": [
   {
    "id": "sp500_trend",
    "group": "macro",
    "name": "S&P 500 vs 10-month average",
    "status": "clear",
-   "value_text": "Close 7,757 vs provisional 10-month average 7,322 (provisional until month-end); last month-end avg 7,231",
+   "value_text": "Close 7,624 vs provisional 10-month average 7,309 (provisional until month-end); last month-end avg 7,231",
    "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)",
-   "as_of": "2026-10-21",
+   "as_of": "2026-10-23",
    "source_url": "https://fred.stlouisfed.org/series/SP500",
    "stale": false
   },
@@ -21,9 +21,9 @@
    "group": "macro",
    "name": "Yield curve (10y minus 3m)",
    "status": "clear",
-   "value_text": "10y-3m +0.74 pts; 10y-2y +0.31",
+   "value_text": "10y-3m +0.78 pts; 10y-2y +0.31",
    "trigger_text": "T10Y3M below 0 for 5+ consecutive daily readings (tripped); 0 to +0.25 (watch)",
-   "as_of": "2026-10-22",
+   "as_of": "2026-10-23",
    "source_url": "https://fred.stlouisfed.org/series/T10Y3M",
    "stale": false
   },
@@ -32,9 +32,9 @@
    "group": "macro",
    "name": "Baa corporate spread (BAA10Y)",
    "status": "clear",
-   "value_text": "1.44 pts; +5 bp from 12-month low (1.39)",
+   "value_text": "1.46 pts; +7 bp from 12-month low (1.39)",
    "trigger_text": "At or above 2.13 or up 50 bp from 12-month low (tripped); up 30 bp (watch)",
-   "as_of": "2026-10-21",
+   "as_of": "2026-10-22",
    "source_url": "https://fred.stlouisfed.org/series/BAA10Y",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "watch",
-   "value_text": "3.40 pts; +72 bp over 3 months",
+   "value_text": "3.38 pts; +61 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-10-22",
+   "as_of": "2026-10-23",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
@@ -78,7 +78,7 @@
    "status": "context",
    "value_text": "Target range 3.75-4.00%; effective 3.88%; last move a hike on 2026-09-17",
    "trigger_text": "Context only, never tripped",
-   "as_of": "2026-10-21",
+   "as_of": "2026-10-22",
    "source_url": "https://fred.stlouisfed.org/series/DFF",
    "stale": false
   },
