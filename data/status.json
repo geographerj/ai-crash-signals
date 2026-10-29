@@ -1,18 +1,18 @@
 {
- "computed_at": "2026-10-28T18:53:05+00:00",
+ "computed_at": "2026-10-29T18:58:27+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; all macro indicators clear.",
- "build": "fefc487",
+ "build": "dadb437",
  "indicators": [
   {
    "id": "sp500_trend",
    "group": "macro",
    "name": "S&P 500 vs 10-month average",
    "status": "clear",
-   "value_text": "Close 7,723 vs provisional 10-month average 7,318 (provisional until month-end); last month-end avg 7,231",
+   "value_text": "Close 7,744 vs provisional 10-month average 7,321 (provisional until month-end); last month-end avg 7,231",
    "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)",
-   "as_of": "2026-10-27",
+   "as_of": "2026-10-28",
    "source_url": "https://fred.stlouisfed.org/series/SP500",
    "stale": false
   },
@@ -21,9 +21,9 @@
    "group": "macro",
    "name": "Yield curve (10y minus 3m)",
    "status": "clear",
-   "value_text": "10y-3m +0.77 pts; 10y-2y +0.29",
+   "value_text": "10y-3m +0.87 pts; 10y-2y +0.38",
    "trigger_text": "T10Y3M below 0 for 5+ consecutive daily readings (tripped); 0 to +0.25 (watch)",
-   "as_of": "2026-10-27",
+   "as_of": "2026-10-28",
    "source_url": "https://fred.stlouisfed.org/series/T10Y3M",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "clear",
-   "value_text": "3.18 pts; +37 bp over 3 months",
+   "value_text": "3.14 pts; +30 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-10-27",
+   "as_of": "2026-10-28",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
@@ -54,9 +54,9 @@
    "group": "macro",
    "name": "Initial jobless claims (4-wk avg)",
    "status": "clear",
-   "value_text": "4-week avg 197,750; +0.0% vs 52-week low (197,750)",
+   "value_text": "4-week avg 196,750; +0.0% vs 52-week low (196,750)",
    "trigger_text": "20% or more above 52-week low (tripped); 15% or more (watch)",
-   "as_of": "2026-10-17",
+   "as_of": "2026-10-24",
    "source_url": "https://fred.stlouisfed.org/series/ICSA",
    "stale": false
   },
@@ -78,7 +78,7 @@
    "status": "context",
    "value_text": "Target range 3.75-4.00%; effective 3.88%; last move a hike on 2026-09-17",
    "trigger_text": "Context only, never tripped",
-   "as_of": "2026-10-26",
+   "as_of": "2026-10-27",
    "source_url": "https://fred.stlouisfed.org/series/DFF",
    "stale": false
   },
