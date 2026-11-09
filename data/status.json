@@ -1,9 +1,9 @@
 {
- "computed_at": "2026-11-06T19:57:43+00:00",
+ "computed_at": "2026-11-09T22:59:39+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: high-yield spread widening.",
- "build": "5e79566",
+ "build": "a3f8e3d",
  "indicators": [
   {
    "id": "sp500_trend",
@@ -21,9 +21,9 @@
    "group": "macro",
    "name": "Yield curve (10y minus 3m)",
    "status": "clear",
-   "value_text": "10y-3m +0.67 pts; 10y-2y +0.38",
+   "value_text": "10y-3m +0.64 pts; 10y-2y +0.32",
    "trigger_text": "T10Y3M below 0 for 5+ consecutive daily readings (tripped); 0 to +0.25 (watch)",
-   "as_of": "2026-11-05",
+   "as_of": "2026-11-09",
    "source_url": "https://fred.stlouisfed.org/series/T10Y3M",
    "stale": false
   },
@@ -32,9 +32,9 @@
    "group": "macro",
    "name": "Baa corporate spread (BAA10Y)",
    "status": "clear",
-   "value_text": "1.52 pts; +13 bp from 12-month low (1.39)",
+   "value_text": "1.56 pts; +17 bp from 12-month low (1.39)",
    "trigger_text": "At or above 2.13 or up 50 bp from 12-month low (tripped); up 30 bp (watch)",
-   "as_of": "2026-11-04",
+   "as_of": "2026-11-06",
    "source_url": "https://fred.stlouisfed.org/series/BAA10Y",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "watch",
-   "value_text": "3.48 pts; +73 bp over 3 months",
+   "value_text": "3.42 pts; +71 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-11-05",
+   "as_of": "2026-11-06",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
@@ -78,7 +78,7 @@
    "status": "context",
    "value_text": "Target range 3.75-4.00%; effective 3.88%; last move a hike on 2026-09-17",
    "trigger_text": "Context only, never tripped",
-   "as_of": "2026-11-04",
+   "as_of": "2026-11-06",
    "source_url": "https://fred.stlouisfed.org/series/DFF",
    "stale": false
   },
