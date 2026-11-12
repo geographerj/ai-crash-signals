@@ -1,18 +1,18 @@
 {
- "computed_at": "2026-11-11T20:12:52+00:00",
+ "computed_at": "2026-11-12T20:50:39+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: high-yield spread widening.",
- "build": "648177d",
+ "build": "5edfd95",
  "indicators": [
   {
    "id": "sp500_trend",
    "group": "macro",
    "name": "S&P 500 vs 10-month average",
    "status": "clear",
-   "value_text": "Close 7,521 vs provisional 10-month average 7,362 (provisional until month-end); last month-end avg 7,304",
+   "value_text": "Close 7,619 vs provisional 10-month average 7,372 (provisional until month-end); last month-end avg 7,304",
    "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)",
-   "as_of": "2026-11-10",
+   "as_of": "2026-11-11",
    "source_url": "https://fred.stlouisfed.org/series/SP500",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "watch",
-   "value_text": "3.34 pts; +64 bp over 3 months",
+   "value_text": "3.30 pts; +58 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-11-09",
+   "as_of": "2026-11-11",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
@@ -54,9 +54,9 @@
    "group": "macro",
    "name": "Initial jobless claims (4-wk avg)",
    "status": "clear",
-   "value_text": "4-week avg 194,750; +0.0% vs 52-week low (194,750)",
+   "value_text": "4-week avg 195,250; +0.0% vs 52-week low (195,250)",
    "trigger_text": "20% or more above 52-week low (tripped); 15% or more (watch)",
-   "as_of": "2026-10-31",
+   "as_of": "2026-11-07",
    "source_url": "https://fred.stlouisfed.org/series/ICSA",
    "stale": false
   },
