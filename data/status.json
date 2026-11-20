@@ -1,18 +1,18 @@
 {
- "computed_at": "2026-11-19T21:37:34+00:00",
+ "computed_at": "2026-11-20T21:08:02+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: S&P 500 below its 10-month average intra-month, high-yield spread widening.",
- "build": "7b69de7",
+ "build": "786a5bc",
  "indicators": [
   {
    "id": "sp500_trend",
    "group": "macro",
    "name": "S&P 500 vs 10-month average",
    "status": "watch",
-   "value_text": "Close 7,324 vs provisional 10-month average 7,343 (provisional until month-end); last month-end avg 7,304",
+   "value_text": "Close 7,176 vs provisional 10-month average 7,328 (provisional until month-end); last month-end avg 7,304",
    "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)",
-   "as_of": "2026-11-18",
+   "as_of": "2026-11-19",
    "source_url": "https://fred.stlouisfed.org/series/SP500",
    "stale": false
   },
@@ -21,9 +21,9 @@
    "group": "macro",
    "name": "Yield curve (10y minus 3m)",
    "status": "clear",
-   "value_text": "10y-3m +0.73 pts; 10y-2y +0.27",
+   "value_text": "10y-3m +0.70 pts; 10y-2y +0.28",
    "trigger_text": "T10Y3M below 0 for 5+ consecutive daily readings (tripped); 0 to +0.25 (watch)",
-   "as_of": "2026-11-18",
+   "as_of": "2026-11-19",
    "source_url": "https://fred.stlouisfed.org/series/T10Y3M",
    "stale": false
   },
@@ -32,9 +32,9 @@
    "group": "macro",
    "name": "Baa corporate spread (BAA10Y)",
    "status": "clear",
-   "value_text": "1.53 pts; +14 bp from 12-month low (1.39)",
+   "value_text": "1.52 pts; +13 bp from 12-month low (1.39)",
    "trigger_text": "At or above 2.13 or up 50 bp from 12-month low (tripped); up 30 bp (watch)",
-   "as_of": "2026-11-17",
+   "as_of": "2026-11-18",
    "source_url": "https://fred.stlouisfed.org/series/BAA10Y",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "watch",
-   "value_text": "3.47 pts; +72 bp over 3 months",
+   "value_text": "3.52 pts; +79 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-11-18",
+   "as_of": "2026-11-19",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
