@@ -1,18 +1,18 @@
 {
- "computed_at": "2026-11-26T22:22:33+00:00",
+ "computed_at": "2026-11-27T21:58:42+00:00",
  "level": 1,
  "level_name": "Watch",
  "reason": "Watch: AI credit stress (CoreWeave distressed, Oracle CDS near record) and memory equities down sharply; macro flags: S&P 500 below its 10-month average intra-month, high-yield spread tripped.",
- "build": "4dcd357",
+ "build": "39372d4",
  "indicators": [
   {
    "id": "sp500_trend",
    "group": "macro",
    "name": "S&P 500 vs 10-month average",
    "status": "watch",
-   "value_text": "Close 7,201 vs provisional 10-month average 7,330 (provisional until month-end); last month-end avg 7,304",
+   "value_text": "Close 7,183 vs provisional 10-month average 7,329 (provisional until month-end); last month-end avg 7,304",
    "trigger_text": "Month-end close below 10-month SMA (tripped); latest close below it intra-month (watch)",
-   "as_of": "2026-11-24",
+   "as_of": "2026-11-25",
    "source_url": "https://fred.stlouisfed.org/series/SP500",
    "stale": false
   },
@@ -43,9 +43,9 @@
    "group": "macro",
    "name": "High-yield spread (HY OAS)",
    "status": "tripped",
-   "value_text": "3.72 pts; +103 bp over 3 months",
+   "value_text": "3.77 pts; +110 bp over 3 months",
    "trigger_text": "At or above 5.0 or up 100 bp in 3 months (tripped); up 50 bp (watch)",
-   "as_of": "2026-11-24",
+   "as_of": "2026-11-26",
    "source_url": "https://fred.stlouisfed.org/series/BAMLH0A0HYM2",
    "stale": false
   },
@@ -78,7 +78,7 @@
    "status": "context",
    "value_text": "Target range 3.75-4.00%; effective 3.88%; no move in the last 60 days",
    "trigger_text": "Context only, never tripped",
-   "as_of": "2026-11-24",
+   "as_of": "2026-11-26",
    "source_url": "https://fred.stlouisfed.org/series/DFF",
    "stale": false
   },
